@@ -12,6 +12,9 @@ Nothing to install. Static HTML, ES modules and a vendored copy of Three.js
 from `file://`.
 
 **Read `docs/PLAN.md` for what the game is and `docs/ARCHITECTURE.md` for how it
-is put together.** The phases in the plan land one commit at a time; this commit
-is the scaffolding — the static shell, the shared 3D stage, the game state and
-the title screen.
+is put together.** The phases in the plan land one commit at a time.
+
+**Phase 1 — the flat hunt** is in: three listings with rent, floor area, ceiling
+height, door size, stairwell access and the quirks that bite later. Cheaper rent
+buys you more furniture and a worse room to put it in, and one of the three is a
+trap.

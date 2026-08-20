@@ -1,6 +1,7 @@
 // The title card. Also the only screen that knows how to describe the game, so
 // it is the one place to look when you want to remember what it is for.
 
+import { APARTMENTS } from '../content/apartments.js';
 import { h } from '../ui/dom.js';
 
 export function mountTitle({ root, onNew, onResume, resumeLabel }) {
@@ -18,8 +19,7 @@ export function mountTitle({ root, onNew, onResume, resumeLabel }) {
   cont.disabled = !onResume;
   cont.onclick = () => onResume?.();
   const fresh = h('button', 'btn', 'New game');
-  fresh.disabled = !onNew;
-  fresh.onclick = () => onNew?.();
+  fresh.onclick = () => onNew();
   row.append(cont, fresh);
   card.append(row);
 
@@ -29,7 +29,10 @@ export function mountTitle({ root, onNew, onResume, resumeLabel }) {
     <span>R — turn the part</span><span>Tab — next position</span><span>E — exploded view</span>
     <span>hold the mouse on a fastener to drive it</span>`;
   card.append(keys);
-  card.append(h('p', 'muted', 'Scaffolding only so far — the phases land one at a time. See docs/PLAN.md.'));
+
+  const flats = h('div', 'title-flats');
+  APARTMENTS.forEach((a) => flats.append(h('span', 'chip', a.name)));
+  card.append(flats);
 
   el.append(card);
   root.append(el);

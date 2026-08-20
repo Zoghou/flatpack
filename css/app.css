@@ -76,3 +76,21 @@ p { margin: 0 0 .7em; }
 .title-keys span { border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; }
 .title-flats { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
 .chip { font: 10.5px var(--mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; padding: 2px 9px; }
+.listing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; max-width: 1240px; }
+.listing { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.shot { height: 168px; display: grid; place-items: center; }
+.plan { width: 78%; height: 78%; }
+.plan-room { fill: rgba(0,0,0,.22); stroke: #f0ece2; stroke-width: 2; }
+.plan-window { fill: #9fd8ff; }
+.plan-radiator { fill: #e8e2d4; }
+.plan-door { fill: #ffb56b; }
+.plan-label { fill: #f4f1ea; font: 600 9px var(--mono); text-anchor: middle; }
+.listing-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.figures b { display: block; font: 700 16px var(--mono); }
+.figures span { font-size: 10.5px; color: var(--muted); }
+.spec { width: 100%; border-collapse: collapse; font-size: 12px; }
+.spec th { text-align: left; font-weight: 500; color: var(--muted); padding: 2px 0; }
+.spec td { text-align: right; font-family: var(--mono); font-size: 11.5px; }
+.quirks { margin: 0; padding-left: 16px; font-size: 12px; color: #b9c4d2; }
+.quirks li { margin-bottom: 3px; }
