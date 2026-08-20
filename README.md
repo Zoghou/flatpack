@@ -66,14 +66,49 @@ trap.
 | right-click a fitted part | take it out again (if nothing is fastened to it) |
 | `E` | exploded view |
 
-## Tests
+## What is in it
 
-```bash
-npm test        # the assembly rules, headless, no browser needed
+| | |
+|---|---|
+| Flats | 3 listings — cheaper rent, worse room. One is a trap. |
+| Kits | `TÖRNBY` nightstand (tutorial) · `NATTLIG` bed frame · `KLÄDVIK` wardrobe with a door and a hinge-adjustment step |
+| Phases | flat hunt → shop with fit checks → build → furnish with clearance rules |
+
+## Layout
+
+```
+index.html   serve.mjs   css/   vendor/   docs/PLAN.md   docs/ARCHITECTURE.md
+src/ core/  content/  sim/  render/  phases/  ui/
+test/ playthrough.mjs (node)   smoke.mjs, fullplay.mjs (headless Chromium)
 ```
 
 `sim/` is pure logic — no DOM, no Three.js — which is why the rules can be
-tested this way. The suite checks each kit's data (every joint reachable by some
-step, every decoy orientation actually detectable from the hole pattern), plays
-a perfect run of all three kits, and plays a deliberately sloppy one to assert
-it comes out racked and is graded down for it.
+tested without a browser. `content/` is data only: adding a kit never means
+touching the engine. See `docs/ARCHITECTURE.md` for the data contracts.
+
+## Tests
+
+```bash
+npm test                              # the assembly rules, no browser needed
+node test/smoke.mjs                   # boots the game in Chromium
+node test/fullplay.mjs wardrobe       # plays a whole kit through the real UI
+```
+
+`playthrough.mjs` checks each kit's data (every joint reachable by some step,
+every decoy orientation actually detectable from the hole pattern), plays a
+perfect run of all three kits, and plays a deliberately sloppy one to assert it
+comes out racked and is graded down for it.
+
+`fullplay.mjs` assembles an entire kit through the same clicks, keys and
+hold-to-torque a player uses, watching the on-screen gauge to decide when to let
+go, and asserts it reaches a graded report. Both browser tests need Playwright,
+which is not a dependency here: set `PLAYWRIGHT_MODULE` to an installed copy (or
+install `playwright-core` where node can resolve it), and `CHROMIUM_PATH` if you
+want a specific browser binary. Pass `--shots` to write screenshots to
+`$FLATPACK_SHOTS`.
+
+## Known gaps
+
+The carcass is always shown in its final orientation rather than laid flat on
+the floor the way you would really work; bought props (the rug, the lamp) are
+not rendered in the room; no touch controls.
