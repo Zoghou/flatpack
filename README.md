@@ -14,7 +14,12 @@ from `file://`.
 **Read `docs/PLAN.md` for what the game is and `docs/ARCHITECTURE.md` for how it
 is put together.** The phases in the plan land one commit at a time.
 
-**Phase 3 — the build** is in, and it is the game. See "Why it is interesting
+**Phase 4 — furnishing the room** is in: the pieces you built, in the bedroom of
+the flat you took, checked against the clearances you would actually notice
+living there — the door swing, room for the wardrobe door to open, the radiator,
+the window.
+
+**Phase 3 — the build** is the game. See "Why it is interesting
 to build things in it" below.
 
 **Phase 2 — the shop**: a catalogue where every product is checked live

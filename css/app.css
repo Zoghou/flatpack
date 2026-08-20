@@ -276,6 +276,19 @@ p { margin: 0 0 .7em; }
 .bench-info span { font-size: 11px; }
 .bench-row.built .bench-info b { color: var(--good); }
 .next-card .btn { width: 100%; margin-top: 8px; }
+.furnish-ui { pointer-events: none; padding: 14px; }
+.furnish-card { pointer-events: auto; position: absolute; left: 14px; top: 14px; width: 330px; max-height: calc(100vh - 120px); overflow: auto; }
+.piece-list { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
+.piece-row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline; background: #161d26; border: 1px solid #222c38; border-radius: 7px; padding: 7px 9px; color: var(--ink); cursor: pointer; font: inherit; text-align: left; }
+.piece-row.on { border-color: var(--accent); }
+.piece-row .muted { font-size: 11px; }
+.tick { font: 10.5px var(--mono); }
+.tick.ok { color: var(--good); }
+.tick.no { color: var(--bad); }
+.furnish-foot { pointer-events: auto; position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; }
+.furnish-score { display: flex; gap: 7px; align-items: baseline; }
+.furnish-score b { font: 700 22px var(--mono); color: var(--good); }
+.furnish-score span { font-size: 11px; color: var(--muted); }
 @media (max-width: 1180px) {
   .hud-left, .hud-right { width: 280px; }
   .log { left: 306px; width: 300px; }

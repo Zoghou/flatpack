@@ -8,15 +8,8 @@ import { getKit } from './content/catalog.js';
 import { mountApartment } from './phases/apartment.js';
 import { mountShop } from './phases/shop.js';
 import { mountBuild } from './phases/build.js';
+import { mountFurnish } from './phases/furnish.js';
 import { mountTitle } from './phases/title.js';
-import { h } from './ui/dom.js';
-
-/** Placeholder for a phase that is not written yet. */
-function notYet(text) {
-  const el = h('div', 'hud-hint', text);
-  document.getElementById('ui').append(el);
-  setTimeout(() => el.remove(), 3500);
-}
 
 const canvas = document.getElementById('stage');
 const root = document.getElementById('ui');
@@ -56,7 +49,7 @@ function go(phase, extra = {}) {
       current = mountShop({
         root, flat,
         onBuild: (kitId) => go('build', { activeKitId: kitId }),
-        onFurnish: () => notYet('Furnishing the room is the next phase.'),
+        onFurnish: () => go('furnish'),
         onBack: () => go('apartment'),
       });
       break;
@@ -71,6 +64,13 @@ function go(phase, extra = {}) {
       });
       break;
     }
+    case 'furnish':
+      current = mountFurnish({
+        stage, root, flat,
+        onDone: () => go('title'),
+        onBack: () => go('shop'),
+      });
+      break;
     default:
       go('title');
   }
