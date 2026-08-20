@@ -1,0 +1,10 @@
+{
+  "name": "flatpack",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A flat-pack furniture assembly game in the browser",
+  "scripts": {
+    "start": "node serve.mjs"
+  }
+}
