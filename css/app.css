@@ -28,6 +28,13 @@ body {
    zoom and every click on a 3D marker go through it. Interactive panels opt
    back in individually. */
 #ui { position: fixed; inset: 0; pointer-events: none; }
+
+/* The canvas owns its gestures: without this the browser pans and pinch-zooms
+   the page instead of letting OrbitControls orbit, and a hold on a fastener
+   raises the text-selection callout mid-drive. */
+#stage { touch-action: none; }
+body { overscroll-behavior: none; }
+.hud, .screen, .act-bar, .rack, .bom-list { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .screen, .overlay { pointer-events: auto; }
 body[data-phase="title"] #stage,
 body[data-phase="apartment"] #stage,
@@ -184,6 +191,26 @@ p { margin: 0 0 .7em; }
 .toast.bad { border-left-color: var(--bad); }
 .toast.out { opacity: 0; transition: opacity .4s; }
 @keyframes slide { from { opacity: 0; transform: translateY(6px); } }
+/* --------------------------------------------------------------- act bar */
+/* Every keyboard shortcut also has a button here — the only route to these
+   actions on a phone, and the discoverable one everywhere else. */
+.act-bar {
+  position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: 10px 14px; max-width: min(680px, calc(100vw - 24px));
+}
+.act-bar.hidden { display: none; }
+.act-label { font-size: 12.5px; color: #c9d3e0; text-align: center; }
+.act-label.hidden { display: none; }
+.act-row { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.act-row .btn { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; }
+.act-key {
+  font: 600 10px/1 var(--mono); color: var(--muted);
+  border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px;
+}
+.act-row .btn.primary .act-key { border-color: rgba(255, 255, 255, .35); color: #dbe7f5; }
+
 /* --------------------------------------------------------------- overlays */
 .overlay {
   position: absolute; inset: 0; background: rgba(6, 9, 13, .78); display: grid; place-items: center;

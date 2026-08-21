@@ -87,10 +87,37 @@ export function createHud(root, cb) {
       <div class="gauge-needle"></div>
     </div>
     <div class="gauge-foot"><span class="gauge-value">0%</span><span class="gauge-help">hold to drive, let go inside the band</span></div>`;
+  // Every action that has a keyboard shortcut also lives here, because a phone
+  // has no keyboard and a first-time player has not read the title screen.
+  const acts = h('div', 'act-bar hidden');
+  const actLabel = h('div', 'act-label');
+  const actRow = h('div', 'act-row');
+  acts.append(actLabel, actRow);
+
   const log = h('div', 'log');
   const overlay = h('div', 'overlay hidden');
 
-  el.append(top, left, right, hint, gauge, log, overlay);
+  el.append(top, left, right, hint, acts, gauge, log, overlay);
+
+  /**
+   * Show a context bar. `actions` is [{ label, hint, kind, onClick }]; passing
+   * nothing hides it. The bar is the only route to these actions on touch, so
+   * it carries the same verbs as the shortcuts rather than a subset.
+   */
+  function setActions(label, actions) {
+    actRow.innerHTML = '';
+    if (!actions?.length) { acts.classList.add('hidden'); return; }
+    actLabel.innerHTML = label ?? '';
+    actLabel.classList.toggle('hidden', !label);
+    for (const a of actions) {
+      const b = h('button', `btn ${a.kind ?? 'ghost'}`);
+      b.append(h('span', 'act-text', a.label));
+      if (a.hint) b.append(h('span', 'act-key', a.hint));
+      b.onclick = a.onClick;
+      actRow.appendChild(b);
+    }
+    acts.classList.remove('hidden');
+  }
 
   // ------------------------------------------------------------------- api ---
   let lastStepId = null;
@@ -286,7 +313,7 @@ export function createHud(root, cb) {
 
   return {
     el, bookletCanvas,
-    setSteps, setStep, setBom, setTool, setReadout, toast, setHint, setTimer,
+    setSteps, setStep, setBom, setTool, setReadout, toast, setHint, setTimer, setActions,
     showGauge, hideGauge, setPower, showOverlay, hideOverlay, showReport,
     setAssist(on) { assistBtn.textContent = `Assist: ${on ? 'on' : 'off'}`; },
     setExplode(on) { explodeBtn.classList.toggle('on', on); },

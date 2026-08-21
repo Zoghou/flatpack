@@ -89,7 +89,9 @@ try {
   await page.locator('.step-list li.open', { hasText: 'left side panel' }).click();
   await page.locator('.bom-row', { hasText: 'Side panel' }).click();
   await page.waitForTimeout(120);
-  check('picking a part offers a position', (await page.locator('.hud-hint').innerText()).includes('turn'));
+  check('picking a part offers a position', (await page.locator('.act-label').innerText()).includes('Side panel'));
+  check('the action bar offers every held-part action without a keyboard',
+    (await page.locator('.act-row .btn').allInnerTexts()).join('|').includes('Turn it'));
   await page.keyboard.press('Enter');
   await page.waitForTimeout(200);
   const log = await page.locator('.toast').last().innerText();

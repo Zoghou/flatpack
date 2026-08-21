@@ -44,6 +44,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
   let focusStepId = null;
   let exploded = false;
   let driving = null;                    // { jointId, phase, power, spec }
+  let selected = null;                   // slot id tapped on, offered for removal
   let wobble = null;
   let stopAnim = null;
 
@@ -181,6 +182,55 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     return open.find((s) => s.id === focusStepId) ?? open[0];
   }
 
+  /** Keep the on-screen action bar in step with what is in hand. */
+  function updateActions() {
+    if (held) {
+      const slotId = candidates[candIndex];
+      const opts = asm.orientationOptions(slotId);
+      // Slot ids are written to be readable ('side-l', 'shelf'), so they are
+      // the label; the counter only appears when there is a choice to make.
+      const where = candidates.length > 1
+        ? `${slotId} — position ${candIndex + 1} of ${candidates.length}`
+        : slotId;
+      const list = [];
+      if (opts.length > 1) list.push({ label: 'Turn it', hint: 'R', onClick: turnHeld });
+      if (candidates.length > 1) list.push({ label: 'Next position', hint: 'Tab', onClick: nextSlot });
+      list.push({ label: 'Fit it here', hint: '⏎', kind: 'primary', onClick: commitPlace });
+      list.push({ label: 'Put it back', hint: 'Esc', onClick: dropHeld });
+      hud.setActions(`<b>${asm.partName(held)}</b> — ${where}`, list);
+    } else if (selected) {
+      const p = kit.parts.find((x) => x.id === asm.slots.get(selected).part);
+      hud.setActions(`<b>${p.name}</b> ${p.id}`, [
+        { label: 'Take it out', onClick: () => { hud.toast(asm.unplace(selected)); selected = null; refresh(); } },
+        { label: 'Leave it', onClick: () => { selected = null; updateActions(); } },
+      ]);
+    } else {
+      hud.setActions(null, null);
+    }
+  }
+
+  function turnHeld() {
+    if (!held) return;
+    orientIndex = (orientIndex + 1) % asm.orientationOptions(candidates[candIndex]).length;
+    rebuild();
+    updateActions();
+  }
+
+  function nextSlot() {
+    if (!held) return;
+    candIndex = (candIndex + 1) % candidates.length;
+    orientIndex = 0;
+    rebuild();
+    updateActions();
+  }
+
+  function dropHeld() {
+    held = null;
+    candidates = [];
+    hud.setHint('');
+    refresh();
+  }
+
   function refresh() {
     const step = currentStep();
     focusStepId = step?.id ?? null;
@@ -191,6 +241,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     hud.setStep(step, asm, stepExtras(step, rig));
     hud.setTool(tool);
     booklet.draw(asm, step);
+    updateActions();
     rebuild();
     gameState.buildSnapshot = asm.serialize();
     save();
@@ -308,7 +359,8 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     held = partId;
     candIndex = 0;
     orientIndex = 0;
-    hud.setHint('<b>R</b> turn · <b>Tab</b> next position · <b>click</b> to fit · <b>Esc</b> put it back');
+    selected = null;
+    hud.setHint('Tap the ghost to fit it, or use the buttons below.');
     refresh();
   }
 
@@ -318,10 +370,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     const opt = asm.orientationOptions(slotId)[orientIndex];
     const ev = asm.place(slotId, opt.id, held);
     hud.toast(ev);
-    held = null;
-    candidates = [];
-    hud.setHint('');
-    refresh();
+    dropHeld();
   }
 
   function beginDrive(jointId, phase) {
@@ -329,6 +378,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     const spec = j[phase];
     if (!spec) return;
     driving = { jointId, phase, power: 0, spec };
+    stage.controls.enabled = false;      // a thumb driving a cam must not also orbit
     hud.showGauge({
       label: `${spec.driver === 'mallet' ? 'Strike force' : 'Torque'} — ${TOOLS[spec.driver].name.toLowerCase()} expected`,
       band: spec.band, strip: spec.strip, unit: spec.driver === 'mallet' ? 'strike' : 'torque',
@@ -347,6 +397,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     if (!driving) return;
     const { jointId, phase, power } = driving;
     driving = null;
+    stage.controls.enabled = true;
     stopAnim?.(); stopAnim = null;
     hud.hideGauge();
     hud.toast(asm.drive(jointId, phase, power, tool));
@@ -385,21 +436,55 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
 
   const canvas = stage.renderer.domElement;
 
+  // A press that turns into a drag is the player orbiting the camera, so
+  // everything except driving a fastener waits for the release and checks that
+  // the finger stayed put. Without this, every orbit gesture that happens to
+  // start on a panel also places a part.
+  const TAP_SLOP = 10;                   // px of travel still counted as a tap
+  const TAP_TIME = 700;                  // ms held before it is a hold, not a tap
+  let down = null;
+
   function onPointerDown(e) {
     if (e.button === 2) return;
     // Markers are drawn through the model (depthTest off), so they have to pick
     // through it as well — otherwise a cam on the far face is visible but dead.
     const hit = stage.pick(e, [gMarkers]) ?? stage.pick(e, [gParts]);
-    if (!hit) return;
-    const { kind, id, phase } = hit.object.userData.pick ?? {};
-    if (kind === 'joint') { e.preventDefault(); beginDrive(id, phase); }
-    else if (kind === 'ghost') commitPlace();
-    else if (kind === 'candidate') { candIndex = candidates.indexOf(id); orientIndex = 0; rebuild(); }
+    const pick = hit?.object.userData.pick ?? {};
+    // Driving is a hold: it has to start on the press, and it owns the pointer
+    // until release so the camera does not follow the finger.
+    if (pick.kind === 'joint') {
+      e.preventDefault();
+      canvas.setPointerCapture?.(e.pointerId);
+      beginDrive(pick.id, pick.phase);
+      down = null;
+      return;
+    }
+    down = { x: e.clientX, y: e.clientY, t: performance.now(), pick };
+  }
+
+  function onPointerUp(e) {
+    endDrive();
+    const d = down;
+    down = null;
+    if (!d) return;
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP) return;
+    if (performance.now() - d.t > TAP_TIME) return;
+    onTap(d.pick);
+  }
+
+  function onTap({ kind, id }) {
+    if (kind === 'ghost') commitPlace();
+    else if (kind === 'candidate') { candIndex = candidates.indexOf(id); orientIndex = 0; rebuild(); updateActions(); }
     else if (kind === 'part') {
       const slot = asm.slots.get(id);
       const p = kit.parts.find((x) => x.id === slot.part);
       const placed = asm.state.placed.get(id);
-      hud.setHint(`<b>${p.name}</b> ${p.id} · ${p.size.map(Math.round).join(' × ')} mm${placed.correct ? '' : ' · <span class="bad">fitted the wrong way round</span>'} — right-click to take it out`);
+      selected = held ? null : id;
+      hud.setHint(`<b>${p.name}</b> ${p.id} · ${p.size.map(Math.round).join(' × ')} mm${placed.correct ? '' : ' · <span class="bad">fitted the wrong way round</span>'}`);
+      updateActions();
+    } else if (!held) {
+      selected = null;
+      updateActions();
     }
   }
 
@@ -417,27 +502,22 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     const toolByKey = Object.values(TOOLS).find((t) => t.key === e.key);
     if (toolByKey) { selectTool(toolByKey.id); return; }
     switch (e.key) {
-      case 'r': case 'R':
-        if (!held) return;
-        orientIndex = (orientIndex + 1) % asm.orientationOptions(candidates[candIndex]).length;
-        rebuild();
-        break;
+      case 'r': case 'R': turnHeld(); break;
       case 'Tab':
         if (!held) return;
         e.preventDefault();
-        candIndex = (candIndex + 1) % candidates.length;
-        orientIndex = 0;
-        rebuild();
+        nextSlot();
         break;
       case 'Enter': if (held) commitPlace(); break;
-      case 'Escape': held = null; candidates = []; hud.setHint(''); refresh(); break;
+      case 'Escape': selected = null; dropHeld(); break;
       case 'e': case 'E': exploded = !exploded; hud.setExplode(exploded); rebuild(); break;
       default: break;
     }
   }
 
   canvas.addEventListener('pointerdown', onPointerDown);
-  window.addEventListener('pointerup', endDrive);
+  window.addEventListener('pointerup', onPointerUp);
+  window.addEventListener('pointercancel', onPointerUp);
   canvas.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('keydown', onKeyDown);
 
@@ -459,7 +539,8 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
       clearInterval(timerId);
       stopAnim?.();
       canvas.removeEventListener('pointerdown', onPointerDown);
-      window.removeEventListener('pointerup', endDrive);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
       canvas.removeEventListener('contextmenu', onContextMenu);
       window.removeEventListener('keydown', onKeyDown);
       booklet.dispose();
