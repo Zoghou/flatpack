@@ -312,6 +312,7 @@ p { margin: 0 0 .7em; }
 .bench-row.built .bench-info b { color: var(--good); }
 .next-card .btn { width: 100%; margin-top: 8px; }
 .furnish-ui { pointer-events: none; padding: 14px; }
+.furnish-sheet { display: contents; }  /* the two panels place themselves */
 .furnish-card { pointer-events: auto; position: absolute; left: 14px; top: 14px; width: 330px; max-height: calc(100vh - 120px); overflow: auto; }
 .piece-list { display: flex; flex-direction: column; gap: 5px; margin: 10px 0; }
 .piece-row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: baseline; background: #161d26; border: 1px solid #222c38; border-radius: 7px; padding: 7px 9px; color: var(--ink); cursor: pointer; font: inherit; text-align: left; }
@@ -415,16 +416,15 @@ p { margin: 0 0 .7em; }
      the whole screen, and it covered the floor you need to drag on. It becomes
      a bottom sheet, leaving the top half of the screen as room. */
   .furnish-ui { padding: 0; }
-  .furnish-card {
-    left: 8px; right: 8px; width: auto; top: auto;
-    bottom: calc(74px + env(safe-area-inset-bottom)); max-height: 36vh;
+  .furnish-sheet {
+    display: flex; flex-direction: column; gap: 6px;
+    position: absolute; left: 8px; right: 8px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
   }
-  .furnish-foot {
-    left: 8px; right: 8px; transform: none; bottom: calc(8px + env(safe-area-inset-bottom));
-    flex-wrap: wrap; justify-content: center; padding: 8px 10px;
-  }
+  .furnish-card { position: static; width: auto; max-height: 34vh; }
+  .furnish-foot { position: static; transform: none; flex-wrap: wrap; justify-content: center; padding: 8px 10px; }
   .furnish-foot .btn { flex: 1 1 auto; }
-  /* and the room only gets the part of the screen the sheet leaves, so a piece
-     is never drawn behind the panel you would have to drag it out from under */
-  body[data-phase="furnish"] #stage { height: calc(100% - 36vh - 74px); }
+  /* and the room only gets the screen the sheet leaves, so a piece is never
+     drawn behind the panel you would have to drag it out from under */
+  body[data-phase="furnish"] #stage { height: calc(100% - var(--sheet-h, 40vh) - 20px); }
 }

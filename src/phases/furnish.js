@@ -40,10 +40,21 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
   // ------------------------------------------------------------------ UI ----
   const panel = h('div', 'screen furnish-ui');
   root.append(panel);
+  // On a wide screen the card and the foot are placed independently; on a
+  // narrow one they stack into a sheet, and the room has to know how tall that
+  // sheet ended up so it can keep clear of it. Hence the wrapper and the
+  // measurement — a guessed reserve was always either wrong or wasteful.
+  const sheet = h('div', 'furnish-sheet');
   const card = h('div', 'card furnish-card');
-  panel.append(card);
   const foot = h('div', 'furnish-foot');
-  panel.append(foot);
+  sheet.append(card, foot);
+  panel.append(sheet);
+
+  const sheetSize = new ResizeObserver(() => {
+    const px = Math.round(sheet.getBoundingClientRect().height);
+    document.body.style.setProperty('--sheet-h', `${px}px`);
+  });
+  sheetSize.observe(sheet);
 
   function render() {
     card.innerHTML = '';
@@ -342,6 +353,8 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
 
   return {
     unmount() {
+      sheetSize.disconnect();
+      document.body.style.removeProperty('--sheet-h');
       delete window.__flatpackFurnish;
       canvas.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
