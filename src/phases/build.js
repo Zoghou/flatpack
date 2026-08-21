@@ -361,6 +361,7 @@ export function mountBuild({ stage, root, kit, onExit, onFinished }) {
     orientIndex = 0;
     selected = null;
     hud.setHint('Tap the ghost to fit it, or use the buttons below.');
+    hud.focusScene();
     refresh();
   }
 

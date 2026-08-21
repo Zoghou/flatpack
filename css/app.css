@@ -65,6 +65,9 @@ p { margin: 0 0 .7em; }
   padding: 14px; backdrop-filter: blur(9px);
 }
 .card h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); }
+/* Tab strip: desktop shows both columns at once, so it only exists on phones. */
+.hud-tabs { display: none; }
+
 /* -------------------------------------------------------------------- HUD */
 .hud { position: absolute; inset: 0; pointer-events: none; }
 .hud > * { pointer-events: auto; }
@@ -181,7 +184,9 @@ p { margin: 0 0 .7em; }
 .gauge-needle { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #fff; box-shadow: 0 0 6px #fff; }
 .gauge-foot { display: flex; justify-content: space-between; margin-top: 6px; font: 11px var(--mono); color: var(--muted); }
 
-.log { position: absolute; left: 366px; bottom: 18px; width: 400px; display: flex; flex-direction: column; gap: 6px; }
+.log { position: absolute; left: 366px; bottom: 18px; width: 400px; display: flex; flex-direction: column; gap: 6px;
+  pointer-events: none; }                /* the toasts are not interactive, and an
+                                            empty log must not swallow taps */
 .toast {
   background: var(--panel); border-left: 3px solid var(--line); border-radius: 6px; padding: 8px 11px;
   font-size: 12.5px; animation: slide .18s ease-out; backdrop-filter: blur(8px);
@@ -259,6 +264,9 @@ p { margin: 0 0 .7em; }
 .title-keys { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font: 11px var(--mono); color: var(--muted); }
 .title-keys b { width: 100%; font: 600 10px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
 .title-keys span { border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; }
+.title-touch { display: none; flex-wrap: wrap; gap: 8px; justify-content: center; font: 11px var(--mono); color: var(--muted); }
+.title-touch b { width: 100%; font: 600 10px var(--sans); letter-spacing: .12em; text-transform: uppercase; }
+.title-touch span { border: 1px solid var(--line); border-radius: 5px; padding: 3px 7px; }
 .title-flats { display: flex; gap: 6px; justify-content: center; margin-top: 14px; }
 .chip { font: 10.5px var(--mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 12px; padding: 2px 9px; }
 .listing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: 16px; max-width: 1240px; }
@@ -313,6 +321,7 @@ p { margin: 0 0 .7em; }
 .tick.ok { color: var(--good); }
 .tick.no { color: var(--bad); }
 .furnish-foot { pointer-events: auto; position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 16px; }
+.turn-btn { display: inline-flex; align-items: center; gap: 7px; align-self: flex-start; }
 .furnish-score { display: flex; gap: 7px; align-items: baseline; }
 .furnish-score b { font: 700 22px var(--mono); color: var(--good); }
 .furnish-score span { font-size: 11px; color: var(--muted); }
@@ -320,4 +329,87 @@ p { margin: 0 0 .7em; }
   .hud-left, .hud-right { width: 280px; }
   .log { left: 306px; width: 300px; }
   .shop-cols { grid-template-columns: 1fr; }
+}
+
+/* ---------------------------------------------------------------- phones */
+/* Below this width the model cannot share the screen with two columns, so the
+   panels become one bottom sheet with a tab strip, and every control grows to
+   a thumb-sized target. */
+@media (max-width: 760px) {
+  .hud-top {
+    flex-wrap: wrap; gap: 6px 10px; padding: 8px 10px;
+    padding-top: max(8px, env(safe-area-inset-top));
+  }
+  .kit-title { flex: 1 1 auto; }
+  .kit-title b { font-size: 14px; }
+  .kit-title span { display: none; }
+  .progress { order: 3; flex: 1 0 100%; }
+  .readout { display: none; }            /* the same numbers live in Rigidity */
+  .top-buttons { gap: 6px; }
+  .top-buttons .btn { min-height: 34px; padding: 0 9px; font-size: 11.5px; }
+
+  /* one sheet, one card at a time */
+  .hud-left, .hud-right {
+    position: absolute; left: 0; right: 0; width: auto;
+    top: auto; bottom: calc(46px + env(safe-area-inset-bottom));
+    max-height: 42vh; overflow: auto; padding: 0 8px 8px;
+    display: block;
+  }
+  .hud-left .card, .hud-right .card { display: none; margin: 0; }
+  .hud[data-tab="step"]  .step-card,
+  .hud[data-tab="steps"] .steps-card,
+  .hud[data-tab="parts"] .bom-card,
+  .hud[data-tab="tools"] .rack-card,
+  .hud[data-tab="rig"]   .rig-card { display: block; }
+  .hud[data-tab="none"] .hud-left, .hud[data-tab="none"] .hud-right { display: none; }
+
+  /* the model keeps the part of the screen the sheet is not using */
+  body[data-sheet="open"] #stage { height: calc(100% - 42vh - 46px); }
+
+  .hud-tabs {
+    display: flex; position: absolute; left: 0; right: 0; z-index: 3;
+    bottom: 0; padding-bottom: env(safe-area-inset-bottom);
+    background: var(--panel); border-top: 1px solid var(--line); pointer-events: auto;
+  }
+  .hud-tabs .tab {
+    flex: 1; min-height: 46px; background: none; border: 0; color: var(--muted);
+    font: 600 11px var(--sans); letter-spacing: .02em;
+  }
+  .hud-tabs .tab.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+
+  /* thumb-sized targets in the sheet */
+  .bom-row { padding: 11px 10px; }
+  .rack { grid-template-columns: repeat(3, 1fr); }
+  .tool { min-height: 60px; }
+  .step-list li { padding: 9px 6px; }
+
+  /* the bar and the gauge sit above the sheet, not under the thumb */
+  .act-bar { bottom: calc(52px + env(safe-area-inset-bottom)); width: calc(100vw - 16px); z-index: 2; }
+  .hud[data-tab]:not([data-tab="none"]) .act-bar { bottom: calc(46px + 42vh + env(safe-area-inset-bottom)); }
+  .act-row .btn { min-height: 44px; flex: 1 1 auto; }
+  .gauge { width: calc(100vw - 20px); bottom: calc(120px + env(safe-area-inset-bottom)); }
+  .hud-hint { display: none; }           /* the act bar says the same thing, with buttons */
+  .log { left: 8px; right: 8px; width: auto; top: 88px; bottom: auto; }
+  .overlay .card { max-height: 80vh; overflow: auto; }
+
+  /* the flat, shop and furnish screens */
+  .screen { padding: 14px 12px 28px; }
+  .screen-head h1 { font-size: 20px; }
+  .screen-head p { font-size: 13px; }
+  /* the wallet is absolutely placed beside the heading on a wide screen; at
+     this width there is no beside, so it goes back in the flow above it */
+  .wallet { position: static; margin-bottom: 8px; }
+  .wallet b { font-size: 18px; }
+  /* label and value stack instead of hanging off a 1fr column 90px wide */
+  .checks li, .rules li { grid-template-columns: 14px 1fr; }
+  .checks i, .rules i { grid-column: 2; }
+  .listing-grid { grid-template-columns: 1fr; gap: 12px; }
+  .shop-cols { grid-template-columns: 1fr; }
+  .btn { min-height: 44px; }
+  .title-card { padding: 22px 16px; }
+  .title-card h1 { font-size: 30px; letter-spacing: .16em; }
+  .title-flats { flex-wrap: wrap; }
+  .title-keys { display: none; }         /* those are keyboard shortcuts */
+  .title-touch { display: flex; }
+  .furnish-ui { padding: 10px; }
 }

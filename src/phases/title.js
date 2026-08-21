@@ -30,6 +30,14 @@ export function mountTitle({ root, onNew, onResume, resumeLabel }) {
     <span>hold the mouse on a fastener to drive it</span>`;
   card.append(keys);
 
+  // The same controls for a phone. Only one of the two is ever shown.
+  const touch = h('div', 'title-touch');
+  touch.innerHTML = `<b>Controls</b>
+    <span>one finger — orbit</span><span>two fingers — zoom</span>
+    <span>tap a part to pick it up</span><span>tap the ghost to fit it</span>
+    <span>hold a fastener to drive it</span><span>the buttons do the rest</span>`;
+  card.append(touch);
+
   const flats = h('div', 'title-flats');
   APARTMENTS.forEach((a) => flats.append(h('span', 'chip', a.name)));
   card.append(flats);

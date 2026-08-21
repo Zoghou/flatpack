@@ -51,7 +51,7 @@ export function createHud(root, cb) {
   const right = h('div', 'hud-right');
   const bomCard = h('div', 'card bom-card');
   const bomHead = h('div', 'card-head');
-  bomHead.append(h('h3', null, 'Parts'), h('span', 'muted', 'click to pick up'));
+  bomHead.append(h('h3', null, 'Parts'), h('span', 'muted', 'pick one up'));
   const bomList = h('div', 'bom-list');
   bomCard.append(bomHead, bomList);
 
@@ -94,10 +94,37 @@ export function createHud(root, cb) {
   const actRow = h('div', 'act-row');
   acts.append(actLabel, actRow);
 
+  // ------------------------------------------------------------ phone tabs --
+  // On a narrow screen the two columns cannot sit beside the model, so they
+  // become one bottom sheet and this picks which card is in it. Tapping the
+  // open tab again collapses the sheet to get the whole model back.
+  const PANELS = [
+    ['step', 'Step'], ['steps', 'Order'], ['parts', 'Parts'],
+    ['tools', 'Tools'], ['rig', 'Rigidity'],
+  ];
+  const tabs = h('div', 'hud-tabs');
+  for (const [id, label] of PANELS) {
+    const b = h('button', 'tab', label);
+    b.dataset.tab = id;
+    b.onclick = () => setTab(el.dataset.tab === id ? 'none' : id);
+    tabs.appendChild(b);
+  }
+
+  function setTab(id) {
+    el.dataset.tab = id;
+    // The sheet covers the bottom of the screen, so the 3D canvas has to give
+    // up that space — otherwise the model is centred behind the panel.
+    document.body.dataset.sheet = id === 'none' ? 'closed' : 'open';
+    for (const b of tabs.children) b.classList.toggle('on', b.dataset.tab === id);
+  }
+
+  const onPhone = () => matchMedia('(max-width: 760px)').matches;
+
   const log = h('div', 'log');
   const overlay = h('div', 'overlay hidden');
 
-  el.append(top, left, right, hint, acts, gauge, log, overlay);
+  el.append(top, left, right, tabs, hint, acts, gauge, log, overlay);
+  setTab('step');
 
   /**
    * Show a context bar. `actions` is [{ label, hint, kind, onClick }]; passing
@@ -314,9 +341,11 @@ export function createHud(root, cb) {
   return {
     el, bookletCanvas,
     setSteps, setStep, setBom, setTool, setReadout, toast, setHint, setTimer, setActions,
+    /** Get the panels out of the way so the player can see what they are fitting. */
+    focusScene() { if (onPhone()) setTab('none'); },
     showGauge, hideGauge, setPower, showOverlay, hideOverlay, showReport,
     setAssist(on) { assistBtn.textContent = `Assist: ${on ? 'on' : 'off'}`; },
     setExplode(on) { explodeBtn.classList.toggle('on', on); },
-    destroy() { el.remove(); },
+    destroy() { delete document.body.dataset.sheet; el.remove(); },
   };
 }

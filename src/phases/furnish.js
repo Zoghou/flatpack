@@ -48,7 +48,7 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
   function render() {
     card.innerHTML = '';
     card.append(h('h2', null, 'Where does it go?'));
-    card.append(h('p', 'muted', 'Click a piece, drag it on the floor, press R to turn it a quarter turn. The rules below are the ones you will actually notice living here.'));
+    card.append(h('p', 'muted', 'Pick a piece, drag it across the floor, and turn it a quarter turn at a time. The rules below are the ones you will actually notice living here.'));
     const list = h('div', 'piece-list');
     const report = evaluate();
     for (const p of pieces) {
@@ -60,6 +60,14 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
       list.append(row);
     }
     card.append(list);
+
+    // Turning was R-only, which leaves a phone with no way to do it at all.
+    const turn = h('button', 'btn ghost', 'Turn it 90°');
+    turn.disabled = !selected;
+    turn.onclick = () => turnSelected();
+    turn.append(h('span', 'act-key', 'R'));
+    turn.classList.add('turn-btn');
+    card.append(turn);
 
     const rules = h('ul', 'rules');
     for (const r of report.rules) {
@@ -307,13 +315,15 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
     render();
   }
 
-  function onKey(e) {
+  function turnSelected() {
     if (!selected) return;
-    if (e.key === 'r' || e.key === 'R') {
-      selected.rot = (selected.rot + 90) % 360;
-      place(selected);
-      render();
-    }
+    selected.rot = (selected.rot + 90) % 360;
+    place(selected);
+    render();
+  }
+
+  function onKey(e) {
+    if (e.key === 'r' || e.key === 'R') turnSelected();
   }
 
   canvas.addEventListener('pointerdown', onDown);
