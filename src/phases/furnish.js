@@ -326,6 +326,9 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
     if (e.key === 'r' || e.key === 'R') turnSelected();
   }
 
+  // Testing seam: the browser test drives the same picking path a player does.
+  window.__flatpackFurnish = { stage, THREE, pieces, get selected() { return selected; } };
+
   canvas.addEventListener('pointerdown', onDown);
   window.addEventListener('pointermove', onMove);
   window.addEventListener('pointerup', onUp);
@@ -339,6 +342,7 @@ export function mountFurnish({ stage, root, flat, onDone, onBack }) {
 
   return {
     unmount() {
+      delete window.__flatpackFurnish;
       canvas.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);

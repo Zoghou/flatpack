@@ -55,6 +55,12 @@ trap.
 
 ## Controls
 
+It plays on a phone: one finger orbits, two zoom, tapping a part picks it up and
+tapping the ghost fits it, and holding a fastener drives it. Everything that has
+a keyboard shortcut also has a button, so nothing is keyboard-only. Under 760px
+the panels become a bottom sheet with a tab strip and the model keeps the rest
+of the screen.
+
 | | |
 |---|---|
 | drag / wheel | orbit and zoom |
@@ -107,6 +113,7 @@ touching the engine. See `docs/ARCHITECTURE.md` for the data contracts.
 npm test                              # the assembly rules, no browser needed
 node test/smoke.mjs                   # boots the game in Chromium
 node test/fullplay.mjs wardrobe       # plays a whole kit through the real UI
+node test/mobile.mjs wardrobe        # plays it again at 390x844, touch only
 ```
 
 `playthrough.mjs` checks each kit's data (every joint reachable by some step,
@@ -116,7 +123,13 @@ comes out racked and is graded down for it.
 
 `fullplay.mjs` assembles an entire kit through the same clicks, keys and
 hold-to-torque a player uses, watching the on-screen gauge to decide when to let
-go, and asserts it reaches a graded report. Both browser tests need Playwright,
+go, and asserts it reaches a graded report.
+
+`mobile.mjs` does the same at phone size with nothing but touch events
+(`Input.dispatchTouchEvent`, so the game sees real `pointerType: 'touch'`) — tap
+to pick, hold to torque, drag to move furniture — and counts key presses to
+prove the run never touched a keyboard. It is what caught the panel that covered
+the floor you drag furniture on. Both browser tests need Playwright,
 which is not a dependency here: set `PLAYWRIGHT_MODULE` to an installed copy (or
 install `playwright-core` where node can resolve it), and `CHROMIUM_PATH` if you
 want a specific browser binary. Pass `--shots` to write screenshots to
@@ -126,4 +139,6 @@ want a specific browser binary. Pass `--shots` to write screenshots to
 
 The carcass is always shown in its final orientation rather than laid flat on
 the floor the way you would really work; bought props (the rug, the lamp) are
-not rendered in the room; no touch controls.
+not rendered in the room. On a phone the game is portrait-first — landscape
+works but the sheet takes a large share of a short screen — and there is no
+pinch-to-zoom shortcut beyond what OrbitControls does with two fingers.

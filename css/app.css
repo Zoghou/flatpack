@@ -411,5 +411,20 @@ p { margin: 0 0 .7em; }
   .title-flats { flex-wrap: wrap; }
   .title-keys { display: none; }         /* those are keyboard shortcuts */
   .title-touch { display: flex; }
-  .furnish-ui { padding: 10px; }
+  /* The card is 330px wide beside the room on a desktop; on a phone that is
+     the whole screen, and it covered the floor you need to drag on. It becomes
+     a bottom sheet, leaving the top half of the screen as room. */
+  .furnish-ui { padding: 0; }
+  .furnish-card {
+    left: 8px; right: 8px; width: auto; top: auto;
+    bottom: calc(74px + env(safe-area-inset-bottom)); max-height: 36vh;
+  }
+  .furnish-foot {
+    left: 8px; right: 8px; transform: none; bottom: calc(8px + env(safe-area-inset-bottom));
+    flex-wrap: wrap; justify-content: center; padding: 8px 10px;
+  }
+  .furnish-foot .btn { flex: 1 1 auto; }
+  /* and the room only gets the part of the screen the sheet leaves, so a piece
+     is never drawn behind the panel you would have to drag it out from under */
+  body[data-phase="furnish"] #stage { height: calc(100% - 36vh - 74px); }
 }
