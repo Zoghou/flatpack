@@ -66,6 +66,21 @@ trap.
 | right-click a fitted part | take it out again (if nothing is fastened to it) |
 | `E` | exploded view |
 
+## Putting it online
+
+It is a static site with no build step, so any static host works — including
+GitHub Pages: **Settings → Pages → Deploy from a branch → `main` / `/ (root)`**.
+Everything the page loads is a relative path, so serving it from a subpath such
+as `https://<user>.github.io/flatpack/` works unchanged.
+
+The empty `.nojekyll` file in the root is load-bearing: without it Pages runs the
+tree through Jekyll, which silently drops files whose names begin with an
+underscore — and `src/content/kits/_build.js`, the helper every kit is built
+with, is one of them. The result would be a blank page and a 404 in the console.
+
+Pages on a **private** repo needs a paid GitHub plan; on the free plan the repo
+has to be public.
+
 ## What is in it
 
 | | |
